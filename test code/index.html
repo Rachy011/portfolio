@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Portfolio OS</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; overflow: hidden; width: 100vw; height: 100vh; }
+
+    /* ─── LOCK SCREEN ─── */
+    #lock-screen {
+      position: fixed; inset: 0; z-index: 100;
+      background: radial-gradient(ellipse at 50% 40%, #1a3a6b 0%, #0d2244 40%, #06101f 100%);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: opacity 0.6s ease;
+    }
+    #lock-screen.fade-out { opacity: 0; pointer-events: none; }
+
+    #lock-clock {
+      font-size: clamp(4rem, 10vw, 7rem);
+      font-weight: 200;
+      color: #e8edf5;
+      letter-spacing: 0.02em;
+      line-height: 1;
+    }
+    #lock-date {
+      font-size: clamp(1rem, 2vw, 1.3rem);
+      font-weight: 300;
+      color: #c8d4e8;
+      margin-top: 0.5rem;
+      letter-spacing: 0.04em;
+    }
+    #lock-hint {
+      position: absolute; bottom: 2.5rem;
+      font-size: 0.7rem;
+      letter-spacing: 0.25em;
+      color: #4a6080;
+      text-transform: uppercase;
+      animation: pulse 2.5s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:0.9} }
+
+    /* ─── DESKTOP ─── */
+    #desktop {
+       position: fixed; inset: 0;
+      background:
+        linear-gradient(to right, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.05) 100%),
+        url(images/BG-image.jpg) center/cover no-repeat;
+      display: flex; flex-direction: column; 
+    }
+
+    /* Desktop icons column */
+    #desktop-icons {
+      position: absolute; top: 1.2rem; left: 1rem;
+      display: flex; flex-direction: column; gap: 0.2rem;
+    }
+    .desk-icon {
+      display: flex; flex-direction: column; align-items: center;
+      width: 72px; padding: 0.45rem 0.3rem;
+      border-radius: 6px; cursor: pointer;
+      transition: background 0.15s;
+      user-select: none;
+    }
+    .desk-icon:hover { background: rgba(255,255,255,0.12); }
+    .desk-icon:active { background: rgba(255,255,255,0.2); }
+    .desk-icon i {
+      font-size: 1.55rem;
+      margin-bottom: 0.3rem;
+    }
+    .desk-icon span {
+      font-size: 0.7rem; color: #fff;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+      text-align: center; line-height: 1.2;
+    }
+    .icon-about   i { color: #5bc8f5; }
+    .icon-projects i { color:#f5c842; }
+    .icon-skills  i { color: #a78bfa; }
+    .icon-resume  i { color: #4ade80; }
+    .icon-contact i { color: #f97316; }
+
+    /* ─── TASKBAR ─── */
+    #taskbar {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      height: 42px;
+      background: rgba(15,20,35,0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center;
+      padding: 0 0.6rem;
+      gap: 0.4rem;
+    }
+    .win-body img{
+      width: 90px;
+    }
+    #taskbar .win-btn {
+      width: 32px; height: 32px; border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0;
+    }
+    #taskbar .win-btn:hover { background: rgba(255,255,255,0.1); }
+    .win-logo { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; width: 16px; height: 16px; }
+    .win-logo span { display: block; border-radius: 1px; }
+    .win-logo span:nth-child(1) { background: #f25022; }
+    .win-logo span:nth-child(2) { background: #7fba00; }
+    .win-logo span:nth-child(3) { background: #00a4ef; }
+    .win-logo span:nth-child(4) { background: #ffb900; }
+
+    .search-bar {
+      display: flex; align-items: center; gap: 0.4rem;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 4px; padding: 0 0.6rem;
+      height: 28px; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .search-bar:hover { background: rgba(255,255,255,0.12); }
+    .search-bar i { color: #8899aa; font-size: 0.75rem; }
+    .search-bar span { color: #8899aa; font-size: 0.72rem; }
+
+    .taskbar-right {
+      margin-left: auto;
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .taskbar-right i { color: #c0cfe0; font-size: 0.85rem; cursor: pointer; }
+    .taskbar-right i:hover { color: #fff; }
+    .notif-dot {
+      position: relative;
+    }
+    .notif-dot::after {
+      content: ''; position: absolute; top: -3px; right: -3px;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #e84444;
+    }
+    #taskbar-time {
+      font-size: 0.68rem; color: #c0cfe0;
+      text-align: right; line-height: 1.4;
+      min-width: 52px;
+    }
+
+    /* ─── MODAL WINDOWS ─── */
+    .os-window {
+      position: fixed;
+      background: rgba(18,24,38,0.96);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+      min-width: 420px; max-width: 680px; width: 50vw;
+      min-height: 260px;
+      z-index: 50;
+      display: none;
+      flex-direction: column;
+      top: 10vh; left: 50%; transform: translateX(-50%);
+      animation: winOpen 0.18s ease;
+    }
+    .os-window.active { display: flex; }
+    @keyframes winOpen { from{opacity:0;transform:translateX(-50%) scale(0.95)} to{opacity:1;transform:translateX(-50%) scale(1)} }
+
+    .win-titlebar {
+      display: flex; align-items: center;
+      padding: 0.55rem 0.8rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      gap: 0.5rem;
+    }
+    .win-titlebar span { color: #d0ddf0; font-size: 0.8rem; font-weight: 500; flex: 1; }
+    .win-controls { display: flex; gap: 0.4rem; }
+    .win-ctrl {
+      width: 13px; height: 13px; border-radius: 50%; cursor: pointer; border: none;
+    }
+    .win-ctrl.close { background: #ff5f56; }
+    .win-ctrl.min   { background: #ffbd2e; }
+    .win-ctrl.max   { background: #27c93f; }
+
+    .win-body { padding: 1.4rem 1.6rem; color: #b8cce0; font-size: 0.85rem; line-height: 1.7; flex: 1; overflow-y: auto; }
+    .win-body h3 { color: #e0ecff; font-size: 1.1rem; margin-bottom: 0.6rem; font-weight: 500; }
+    .win-body p { margin-bottom: 0.8rem; }
+
+    .skill-tag {
+      display: inline-block; background: rgba(91,200,245,0.15);
+      border: 1px solid rgba(91,200,245,0.3);
+      color: #5bc8f5; border-radius: 4px;
+      padding: 0.2rem 0.6rem; font-size: 0.75rem;
+      margin: 0.2rem;
+    }
+    .project-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 6px; padding: 0.8rem 1rem;
+      margin-bottom: 0.7rem;
+    }
+    .project-card h5 { color: #e0ecff; font-size: 0.88rem; margin-bottom: 0.3rem; }
+    .project-card a{text-decoration: none; color: white;
+    }
+    .project-card p  { font-size: 0.78rem; margin: 0; color: #8a9fc0; }
+
+    .contact-link {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      color: #b8cce0; text-decoration: none;
+      font-size: 0.82rem; transition: color 0.15s;
+    }
+    .contact-link:hover { color: #5bc8f5; }
+    .contact-link i { font-size: 1rem; width: 20px; text-align: center; }
+
+    .resume-row {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .resume-row .label { color: #5bc8f5; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; min-width: 90px; }
+    .resume-row .val   { color: #c8d8ec; font-size: 0.82rem; text-align: right; }
+
+    /* overlay backdrop */
+    #overlay { position:fixed;inset:0;z-index:49;display:none; }
+    #overlay.active { display:block; }
+  </style>
+</head>
+<body>
+
+<!-- ─── LOCK SCREEN ─── -->
+<div id="lock-screen">
+  <div id="lock-clock">10:32</div>
+  <div id="lock-date">Friday, June 26</div>
+  <div id="lock-hint">Click anywhere to continue</div>
+</div>
+
+<!-- ─── DESKTOP ─── -->
+<div id="desktop">
+
+  <!-- Icons -->
+  <div id="desktop-icons">
+    <div class="desk-icon icon-about"    onclick="openWin('about')">
+      <i class="bi bi-person-circle"></i><span>About Me</span>
+    </div>
+    <br>
+    <div class="desk-icon icon-projects" onclick="openWin('projects')">
+      <i class="bi bi-folder"></i><span>Projects</span>
+    </div>
+    <br>
+    <div class="desk-icon icon-skills"   onclick="openWin('skills')">
+      <i class="bi bi-star"></i><span>Skills</span>
+    </div>
+    <br>
+    <div class="desk-icon icon-resume"   onclick="openWin('resume')">
+      <i class="bi bi-file-earmark-text"></i><span>Resume</span>
+    </div>
+    <br>
+    <div class="desk-icon icon-contact"  onclick="openWin('contact')">
+      <i class="bi bi-envelope"></i><span>Contact</span>
+    </div>
+  </div>
+
+  <!-- Taskbar -->
+  <div id="taskbar">
+    <div class="win-btn">
+      <div class="win-logo">
+        <span></span><span></span><span></span><span></span>
+      </div>
+    </div>
+    <div class="search-bar">
+      <i class="bi bi-search"></i>
+      <span>Search</span>
+    </div>
+    <div class="taskbar-right">
+      <i class="bi bi-wifi"></i>
+      <i class="bi bi-volume-up"></i>
+      <i class="bi bi-battery-half"></i>
+      <i class="bi bi-bell notif-dot"></i>
+      <div id="taskbar-time">10:32<br>26/06/26</div>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay to close windows -->
+<div id="overlay" onclick="closeAllWin()"></div>
+
+<!-- ─── WINDOWS ─── -->
+
+<!-- About Me -->
+<div class="os-window" id="win-about">
+  <div class="win-titlebar">
+    <i class="bi bi-person-circle" style="color:#5bc8f5"></i>
+    <span>About Me</span>
+    <div class="win-controls">
+      <button class="win-ctrl min"></button>
+      <button class="win-ctrl max"></button>
+      <button class="win-ctrl close" onclick="closeWin('about')"></button>
+    </div>
+  </div>
+  <div class="win-body">
+    <h3> Hi, I'm Lawal Khadijat <img src="images/WhatsApp Image 2026-06-02 at 11.56.58.jpeg" alt=""></h3>
+    <p>A Frontend Developer who enjoys turning ideas into clean, responsive, and user-friendly websites.</p>
+    <p>I build modern web interfaces using HTML, CSS, JavaScript, and React, with a strong focus on creating websites that look great and work well on all devices. I enjoy solving problems, paying attention to details, and writing clean, maintainable code.</p>
+    <p>I'm always learning new technologies and improving my skills to create better user experiences. Whether I'm working independently or as part of a team, I'm committed to delivering high-quality work and meeting project goals.</p>
+    <p>I'm currently open to internship and junior frontend developer opportunities where I can contribute, grow, and help build amazing digital experiences.</p>
+    <p style="color:#5bc8f5">📍 Ilorin, Nigeria &nbsp;|&nbsp; Open to opportunities</p>
+  </div>
+</div>
+
+<!-- Projects -->
+<div class="os-window" id="win-projects">
+  <div class="win-titlebar">
+    <i class="bi bi-folder" style="color:#f5c842"></i>
+    <span>Projects</span>
+    <div class="win-controls">
+      <button class="win-ctrl min"></button>
+      <button class="win-ctrl max"></button>
+      <button class="win-ctrl close" onclick="closeWin('projects')"></button>
+    </div>
+  </div>
+  <div class="win-body">
+    <div class="project-card">
+      <h5><a href="https://palmpay-clone-self.vercel.app/">Palmpay-Clone</a></h5>
+      <p>A responsive PalmPay landing page clone showcasing modern UI design, responsiveness, and frontend development skills.</p>
+    </div>
+    <div class="project-card">
+      <h5><a href="https://cowrywise-clone-kprm-rlqf5iq4b-rachy011s-projects.vercel.app/">cowrywise-clone</a></h5>
+      <p>A responsive Cowrywise website clone demonstrating pixel-perfect design, responsive layouts, and modern frontend techniques.</p>
+    </div>
+    <div class="project-card">
+      <h5>  <a href="">Netflix-clone</a></h5>
+      <p></p>
+    </div>
+    <div class="project-card">
+      <h5> <a href=""></a></h5>
+      <p></p>
+    </div>
+  </div>
+</div>
+
+<!-- Skills -->
+<div class="os-window" id="win-skills">
+  <div class="win-titlebar">
+    <i class="bi bi-star" style="color:#a78bfa"></i>
+    <span>Skills</span>
+    <div class="win-controls">
+      <button class="win-ctrl min"></button>
+      <button class="win-ctrl max"></button>
+      <button class="win-ctrl close" onclick="closeWin('skills')"></button>
+    </div>
+  </div>
+  <div class="win-body">
+    <h3>Frontend</h3>
+    <div style="margin-bottom:1rem">
+      <span class="skill-tag">HTML5</span><span class="skill-tag">CSS3</span>
+      <span class="skill-tag">JavaScript</span><span class="skill-tag">React</span>
+      <span class="skill-tag">Vue.js</span><span class="skill-tag">Bootstrap</span>
+    </div>
+    <!-- <h3>Backend</h3>
+    <div style="margin-bottom:1rem">
+      <span class="skill-tag" style="color:#4ade80;border-color:rgba(74,222,128,0.3);background:rgba(74,222,128,0.1)">Node.js</span>
+      <span class="skill-tag" style="color:#4ade80;border-color:rgba(74,222,128,0.3);background:rgba(74,222,128,0.1)">Express</span>
+      <span class="skill-tag" style="color:#4ade80;border-color:rgba(74,222,128,0.3);background:rgba(74,222,128,0.1)">Python</span>
+      <span class="skill-tag" style="color:#4ade80;border-color:rgba(74,222,128,0.3);background:rgba(74,222,128,0.1)">PostgreSQL</span>
+    </div> -->
+    <h3>Tools & Design</h3>
+    <div>
+      <span class="skill-tag" style="color:#f97316;border-color:rgba(249,115,22,0.3);background:rgba(249,115,22,0.1)">Figma</span>
+      <span class="skill-tag" style="color:#f97316;border-color:rgba(249,115,22,0.3);background:rgba(249,115,22,0.1)">Git</span>
+      <!-- <span class="skill-tag" style="color:#f97316;border-color:rgba(249,115,22,0.3);background:rgba(249,115,22,0.1)">Docker</span> -->
+      <!-- <span class="skill-tag" style="color:#f97316;border-color:rgba(249,115,22,0.3);background:rgba(249,115,22,0.1)">AWS</span> -->
+    </div>
+  </div>
+</div>
+
+<!-- Resume -->
+<div class="os-window" id="win-resume">
+  <div class="win-titlebar">
+    <i class="bi bi-file-earmark-text" style="color:#4ade80"></i>
+    <span>Resume</span>
+    <div class="win-controls">
+      <button class="win-ctrl min"></button>
+      <button class="win-ctrl max"></button>
+      <button class="win-ctrl close" onclick="closeWin('resume')"></button>
+    </div>
+  </div>
+  <div class="win-body">
+    <h3 style="margin-bottom:1rem">Lawal Khadijat</h3>
+    <div class="resume-row">
+      <span class="label">Role</span>
+      <span class="val">Frontend Developer</span>
+    </div>
+    <div class="resume-row">
+      <span class="label">Experience</span>
+      <span class="val">2+ years in web development</span>
+    </div>
+    <div class="resume-row">
+      <span class="label">Education</span>
+      <span class="val">B.Sc. Computer Science, 2026</span>
+    </div>
+    <div class="resume-row">
+      <span class="label">Languages</span>
+      <span class="val">English (Fluent), Yoruba</span>
+    </div>
+    <div class="resume-row">
+      <span class="label">Availability</span>
+      <span class="val" style="color:#4ade80">Available for hire</span>
+    </div>
+    <div style="margin-top:1.2rem;text-align:center">
+      <a href="#" style="display:inline-flex;align-items:center;gap:0.4rem;background:rgba(91,200,245,0.15);border:1px solid rgba(91,200,245,0.3);color:#5bc8f5;padding:0.45rem 1.1rem;border-radius:5px;font-size:0.8rem;text-decoration:none">
+        <i class="bi bi-download"></i> Download CV
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Contact -->
+<div class="os-window" id="win-contact">
+  <div class="win-titlebar">
+    <i class="bi bi-envelope" style="color:#f97316"></i>
+    <span>Contact</span>
+    <div class="win-controls">
+      <button class="win-ctrl min"></button>
+      <button class="win-ctrl max"></button>
+      <button class="win-ctrl close" onclick="closeWin('contact')"></button>
+    </div>
+  </div>
+  <div class="win-body">
+    <h3 style="margin-bottom:1rem">Get In Touch</h3>
+    <a href="mailto:Khadilawal8@gmail.com" class="contact-link">
+      <i class="bi bi-envelope-fill" style="color:#f97316"></i> Khadilawal8@gmail.com
+    </a>
+    <a href="https://www.linkedin.com/in/lawal-khadijat-46a2263a6?utm_source=share_via&utm_content=profile&utm_medium=member_android" class="contact-link">
+      <i class="bi bi-linkedin" style="color:#5bc8f5"></i> https://linkedin.com/in/lawal-khadijat
+    </a>
+    <a href="https://github.com/Rachy011" class="contact-link">
+      <i class="bi bi-github" style="color:#a78bfa"></i> https://github.com/Rachy011
+    </a>
+    <a href="https://x.com/LKhadijat79971" class="contact-link">
+      <i class="bi bi-twitter-x" style="color:#8899aa"></i> https://x.com/LKhadijat79971
+    </a>
+    <a href="tel:+2348000000000" class="contact-link" style="border:none">
+      <i class="bi bi-telephone-fill" style="color:#4ade80"></i> +2347083385640
+    </a>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script>
+  // ── Lock screen ──
+  const lockScreen = document.getElementById('lock-screen');
+  lockScreen.addEventListener('click', () => {
+    lockScreen.classList.add('fade-out');
+    setTimeout(() => { lockScreen.style.display = 'none'; }, 600);
+  });
+
+  // ── Live clock ──
+  function updateClock() {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2,'0');
+    const m = String(now.getMinutes()).padStart(2,'0');
+    const timeStr = `${h}:${m}`;
+    const dateStr = now.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+    const shortDate = now.toLocaleDateString('en-GB').replace(/\//g,'/').substring(0,8);
+
+    document.getElementById('lock-clock').textContent = timeStr;
+    document.getElementById('lock-date').textContent = dateStr;
+    document.getElementById('taskbar-time').innerHTML = `${timeStr}<br>${shortDate}`;
+  }
+  updateClock();
+  setInterval(updateClock, 10000);
+
+  // ── Windows ──
+  function openWin(id) {
+    closeAllWin();
+    document.getElementById('win-' + id).classList.add('active');
+    document.getElementById('overlay').classList.add('active');
+  }
+  function closeWin(id) {
+    document.getElementById('win-' + id).classList.remove('active');
+    document.getElementById('overlay').classList.remove('active');
+  }
+  function closeAllWin() {
+    document.querySelectorAll('.os-window').forEach(w => w.classList.remove('active'));
+    document.getElementById('overlay').classList.remove('active');
+  }
+</script>
+</body>
+</html>
